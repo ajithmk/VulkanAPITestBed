@@ -24,29 +24,34 @@ public:
 		COMMAND_BUFFER = 8,
 		DESCRIPTOR_SET = 9
 	};
-	static bool framebufferResized;
+	bool FramebufferResized;
+	VkInstance VulkanInstance;
+	VkDevice VulkanDevice;
+	VkPhysicalDevice PhysicalDevice;
+	VkFormat SwapChainImageFormat;
+	VkExtent2D SwapChainExtent;
+	VkSwapchainKHR SwapChain;
+	std::vector<VkFramebuffer> SwapChainFramebuffers;
+
+	VkQueue GraphicsQueue;
+	VkQueue PresentQueue;
 
 private:
-	static VkInstance _vulkanInstance;
-	static VkDevice _vulkanDevice;
-	static VkPhysicalDevice _physicalDevice;
-	static GLFWwindow* _window;
-	static VkSurfaceKHR _surface;
+	GLFWwindow* _window;
+	VkSurfaceKHR _surface;
 
-	static VkSwapchainKHR swapChain;
-	static std::vector<VkImage> swapChainImages;
-	static VkFormat swapChainImageFormat;
-	static VkExtent2D swapChainExtent;
-	static std::vector<VkImageView> swapChainImageViews;
-	static std::vector<VkFramebuffer> swapChainFramebuffers;
+	std::vector<VkImage> swapChainImages;
+	std::vector<VkImageView> swapChainImageViews;
 
-	static map<string, VkDescriptorSetLayout> descriptorSetLayouts;
-	static map<string, VkCommandPool> commandPools;
-	static map<string, VkBuffer> buffers;
-	static map<string, VkDeviceMemory> deviceMemories;
-	static map<string, VkDescriptorPool> descriptorPools;
-	static map<string, VkCommandBuffer> commandBuffers;
-	static map<string, VkDescriptorSet>descriptorSets;
+	map<string, VkDescriptorSetLayout> descriptorSetLayouts;
+	map<string, VkCommandPool> commandPools;
+	map<string, VkBuffer> buffers;
+	map<string, VkDeviceMemory> deviceMemories;
+	map<string, VkDescriptorPool> descriptorPools;
+	map<string, VkCommandBuffer> commandBuffers;
+	map<string, VkDescriptorSet>descriptorSets;
+	
+	using SwapChainCallbacks = void (*)();
 
 	struct SwapChainSupportDetails {
 		VkSurfaceCapabilitiesKHR capabilities;
@@ -63,75 +68,82 @@ private:
 		}
 	};
 
-	static VkQueue graphicsQueue;
-	static VkQueue presentQueue;
+
+const  std::vector<const char*> deviceExtensions = {
+	VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
+
+const std::vector<const char*> validationLayers = {
+	"VK_LAYER_KHRONOS_validation"
+};
 
 
-	const static std::vector<const char*> deviceExtensions;
-	const static std::vector<const char*> validationLayers;
-
-	const static bool enableValidationLayers = true;
-
-
+const bool enableValidationLayers = true;
 
 public:
-	void static insertResource(ResourceType type, string s, VkDescriptorSetLayout item)
+	void insertResource(ResourceType type, string s, VkDescriptorSetLayout item)
 	{
 		descriptorSetLayouts[s] = item;
 	}
-	void static insertResource(ResourceType type, string s, VkCommandPool item)
+	void insertResource(ResourceType type, string s, VkCommandPool item)
 	{
 		commandPools[s] = item;
 	}
-	void static insertResource(ResourceType type, string s, VkBuffer item)
+	void insertResource(ResourceType type, string s, VkBuffer item)
 	{
 		buffers[s] = item;
 	}
-	void static insertResource(ResourceType type, string s, VkDeviceMemory item)
+	void insertResource(ResourceType type, string s, VkDeviceMemory item)
 	{
 		deviceMemories[s] = item;
 	}
-	void static insertResource(ResourceType type, string s, VkDescriptorPool item)
+	void insertResource(ResourceType type, string s, VkDescriptorPool item)
 	{
 		descriptorPools[s] = item;
 	}
-	void static insertResource(ResourceType type, string s, VkCommandBuffer item)
+	void insertResource(ResourceType type, string s, VkCommandBuffer item)
 	{
 		commandBuffers[s] = item;
 	}
-	void static insertResource(ResourceType type, string s, VkDescriptorSet item)
+	void insertResource(ResourceType type, string s, VkDescriptorSet item)
 	{
 		descriptorSets[s] = item;
 	}
 
-	static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-		framebufferResized = true;
+	void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+		FramebufferResized = true;
 	}
 
-	using ReCreateSwapChainRelatedResources = void (*)();
+	size_t numOfSwapChains()
+	{
+		return swapChainImages.size();
+	}
 
-	static ReCreateSwapChainRelatedResources reCreateSwapChainRelatedResources;
 
-	RACK(VkInstance instance, GLFWwindow* window, VkSurfaceKHR surface);
+	SwapChainCallbacks reCreateSwapChainRelatedResources;
+	SwapChainCallbacks destroySwapCHainRelatedResources;
+
+	RACK(VkInstance instance, GLFWwindow* window, VkSurfaceKHR surface, SwapChainCallbacks recreate, SwapChainCallbacks destroy);
 
 	~RACK();
-	static void* getResource(ResourceType, string);
+	void* getResource(ResourceType, string);
 
-	static VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-	static VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-	static VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-	static void createSwapChain();
-	static void createImageViews();
-	static void createFramebuffers(VkRenderPass);
-	static void cleanupSwapChain();
-	static void recreateSwapChain();
+	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+	void createSwapChain();
+	void createImageViews();
+	void createFramebuffers(VkRenderPass);
+	void cleanupSwapChain();
+	void recreateSwapChain();
 
-	static bool isDeviceSuitable(VkPhysicalDevice device);
-	static void pickPhysicalDevice();
-	static bool checkDeviceExtensionSupport(VkPhysicalDevice device);
-	static SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice physicalDevice);
-	static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physicalDevice);
-	static void createLogicalDevice();
-
-
+	bool isDeviceSuitable(VkPhysicalDevice device);
+	void pickPhysicalDevice();
+	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
+	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice physicalDevice);
+	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice physicalDevice);
+	void createLogicalDevice();
+	void createDescriptorSetLayout();
 };
+
+extern RACK* rack;

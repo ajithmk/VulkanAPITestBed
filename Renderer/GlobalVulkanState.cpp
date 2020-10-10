@@ -58,29 +58,29 @@ bool RACK::isDeviceSuitable(VkPhysicalDevice device) {
 
 void RACK::pickPhysicalDevice() {
 	uint32_t deviceCount = 0;
-	vkEnumeratePhysicalDevices(_vulkanInstance, &deviceCount, nullptr);
+	vkEnumeratePhysicalDevices(VulkanInstance, &deviceCount, nullptr);
 
 	if (deviceCount == 0) {
 		throw std::runtime_error("failed to find GPUs with Vulkan support!");
 	}
 
 	std::vector<VkPhysicalDevice> devices(deviceCount);
-	vkEnumeratePhysicalDevices(_vulkanInstance, &deviceCount, devices.data());
+	vkEnumeratePhysicalDevices(VulkanInstance, &deviceCount, devices.data());
 
 	for (const auto& device : devices) {
 		if (isDeviceSuitable(device)) {
-			_physicalDevice = device;
+			PhysicalDevice = device;
 			break;
 		}
 	}
 
-	if (_physicalDevice == VK_NULL_HANDLE) {
+	if (PhysicalDevice == VK_NULL_HANDLE) {
 		throw std::runtime_error("failed to find a suitable GPU!");
 	}
 }
 
 void RACK::createLogicalDevice() {
-	QueueFamilyIndices indices = findQueueFamilies(_physicalDevice);
+	QueueFamilyIndices indices = findQueueFamilies(PhysicalDevice);
 
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 	std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
@@ -116,14 +116,12 @@ void RACK::createLogicalDevice() {
 		createInfo.enabledLayerCount = 0;
 	}
 
-	if (vkCreateDevice(_physicalDevice, &createInfo, nullptr, &_vulkanDevice) != VK_SUCCESS) {
+	if (vkCreateDevice(PhysicalDevice, &createInfo, nullptr, &VulkanDevice) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create logical device!");
 	}
 
-	vkGetDeviceQueue(_vulkanDevice, indices.graphicsFamily.value(), 0, &graphicsQueue);
-	vkGetDeviceQueue(_vulkanDevice, indices.presentFamily.value(), 0, &presentQueue);
-
-	//RACK(device, instance);
+	vkGetDeviceQueue(VulkanDevice, indices.graphicsFamily.value(), 0, &GraphicsQueue);
+	vkGetDeviceQueue(VulkanDevice, indices.presentFamily.value(), 0, &PresentQueue);
 }
 
 
@@ -140,7 +138,7 @@ VkSurfaceFormatKHR RACK::chooseSwapSurfaceFormat(const std::vector<VkSurfaceForm
 
 VkPresentModeKHR RACK::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
 	for (const auto& availablePresentMode : availablePresentModes) {
-		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
+		if (availablePresentMode == VK_PRESENT_MODE_FIFO_KHR) {
 			return availablePresentMode;
 		}
 	}
@@ -224,10 +222,8 @@ RACK::QueueFamilyIndices RACK::findQueueFamilies(VkPhysicalDevice physicalDevice
 	return indices;
 }
 
-
-
 void RACK::createSwapChain() {
-	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(_physicalDevice);
+	SwapChainSupportDetails swapChainSupport = querySwapChainSupport(PhysicalDevice);
 
 	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
 	VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
@@ -249,7 +245,7 @@ void RACK::createSwapChain() {
 	createInfo.imageArrayLayers = 1;
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-	QueueFamilyIndices indices = findQueueFamilies(_physicalDevice);
+	QueueFamilyIndices indices = findQueueFamilies(PhysicalDevice);
 	uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
 	if (indices.graphicsFamily != indices.presentFamily) {
@@ -266,16 +262,16 @@ void RACK::createSwapChain() {
 	createInfo.presentMode = presentMode;
 	createInfo.clipped = VK_TRUE;
 
-	if (vkCreateSwapchainKHR(_vulkanDevice, &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
+	if (vkCreateSwapchainKHR(VulkanDevice, &createInfo, nullptr, &SwapChain) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create swap chain!");
 	}
 
-	vkGetSwapchainImagesKHR(_vulkanDevice, swapChain, &imageCount, nullptr);
+	vkGetSwapchainImagesKHR(VulkanDevice, SwapChain, &imageCount, nullptr);
 	swapChainImages.resize(imageCount);
-	vkGetSwapchainImagesKHR(_vulkanDevice, swapChain, &imageCount, swapChainImages.data());
+	vkGetSwapchainImagesKHR(VulkanDevice, SwapChain, &imageCount, swapChainImages.data());
 
-	swapChainImageFormat = surfaceFormat.format;
-	swapChainExtent = extent;
+	SwapChainImageFormat = surfaceFormat.format;
+	SwapChainExtent = extent;
 }
 
 void RACK::createImageViews() {
@@ -286,7 +282,7 @@ void RACK::createImageViews() {
 		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		createInfo.image = swapChainImages[i];
 		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		createInfo.format = swapChainImageFormat;
+		createInfo.format = SwapChainImageFormat;
 		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -297,14 +293,14 @@ void RACK::createImageViews() {
 		createInfo.subresourceRange.baseArrayLayer = 0;
 		createInfo.subresourceRange.layerCount = 1;
 
-		if (vkCreateImageView(_vulkanDevice, &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
+		if (vkCreateImageView(VulkanDevice, &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create image views!");
 		}
 	}
 }
 
 void RACK::createFramebuffers(VkRenderPass renderPass) {
-	swapChainFramebuffers.resize(swapChainImageViews.size());
+	SwapChainFramebuffers.resize(swapChainImageViews.size());
 
 	for (size_t i = 0; i < swapChainImageViews.size(); i++) {
 		VkImageView attachments[] = {
@@ -316,11 +312,11 @@ void RACK::createFramebuffers(VkRenderPass renderPass) {
 		framebufferInfo.renderPass = renderPass;
 		framebufferInfo.attachmentCount = 1;
 		framebufferInfo.pAttachments = attachments;
-		framebufferInfo.width = swapChainExtent.width;
-		framebufferInfo.height = swapChainExtent.height;
+		framebufferInfo.width = SwapChainExtent.width;
+		framebufferInfo.height = SwapChainExtent.height;
 		framebufferInfo.layers = 1;
 
-		if (vkCreateFramebuffer(_vulkanDevice, &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
+		if (vkCreateFramebuffer(VulkanDevice, &framebufferInfo, nullptr, &SwapChainFramebuffers[i]) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create framebuffer!");
 		}
 	}
@@ -334,78 +330,44 @@ void RACK::recreateSwapChain() {
 		glfwWaitEvents();
 	}
 
-	vkDeviceWaitIdle(_vulkanDevice);
+	vkDeviceWaitIdle(VulkanDevice);
 
 	cleanupSwapChain();
 
 	createSwapChain();
 	createImageViews();
+
+	destroySwapCHainRelatedResources();
+	reCreateSwapChainRelatedResources();
 }
 
 
 void RACK::cleanupSwapChain() {
-	for (auto framebuffer : swapChainFramebuffers) {
-		vkDestroyFramebuffer(_vulkanDevice, framebuffer, nullptr);
+	for (auto framebuffer : SwapChainFramebuffers) {
+		vkDestroyFramebuffer(VulkanDevice, framebuffer, nullptr);
 	}
 
 	for (auto imageView : swapChainImageViews) {
-		vkDestroyImageView(_vulkanDevice, imageView, nullptr);
+		vkDestroyImageView(VulkanDevice, imageView, nullptr);
 	}
 
-	vkDestroySwapchainKHR(_vulkanDevice, swapChain, nullptr);
+	vkDestroySwapchainKHR(VulkanDevice, SwapChain, nullptr);
 }
 
-
-map<string, VkDescriptorSetLayout> RACK::descriptorSetLayouts;
-map<string, VkCommandPool> RACK::commandPools;
-map<string, VkBuffer> RACK::buffers;
-map<string, VkDeviceMemory> RACK::deviceMemories;
-map<string, VkDescriptorPool> RACK::descriptorPools;
-map<string, VkCommandBuffer> RACK::commandBuffers;
-map<string, VkDescriptorSet> RACK::descriptorSets;
-
-VkDevice RACK::_vulkanDevice;
-VkInstance RACK::_vulkanInstance;
-VkPhysicalDevice RACK::_physicalDevice;
-VkSurfaceKHR RACK::_surface;
-
-VkSwapchainKHR RACK::swapChain;
-std::vector<VkImage> RACK::swapChainImages;
-VkFormat RACK::swapChainImageFormat;
-VkExtent2D RACK::swapChainExtent;
-std::vector<VkImageView> RACK::swapChainImageViews;
-std::vector<VkFramebuffer> RACK::swapChainFramebuffers;
-
-RACK::ReCreateSwapChainRelatedResources RACK::ReCreateSwapChainRelatedResources = nullptr;
-
-
-bool RACK::framebufferResized = false;
-GLFWwindow* RACK::_window;
-
-VkQueue RACK::graphicsQueue;
-VkQueue RACK::presentQueue;
-
-
-const  std::vector<const char*> RACK::deviceExtensions = {
-	VK_KHR_SWAPCHAIN_EXTENSION_NAME
-};
-
-const std::vector<const char*> RACK::validationLayers = {
-	"VK_LAYER_KHRONOS_validation"
-};
-
-
-RACK::RACK( VkInstance instance, GLFWwindow* window, VkSurfaceKHR surface)
+RACK::RACK( VkInstance instance, GLFWwindow* window, VkSurfaceKHR surface, SwapChainCallbacks recreate, SwapChainCallbacks destroy)
 {
-	_vulkanInstance = instance;
+	VulkanInstance = instance;
 	_window = window;
 	_surface = surface;
+	reCreateSwapChainRelatedResources = recreate;
+	destroySwapCHainRelatedResources = destroy;
 
 	pickPhysicalDevice();
 	createLogicalDevice();
 
 	createSwapChain();
 	createImageViews();
+	//createDescriptorSetLayout();
 }
 
 
@@ -413,22 +375,45 @@ RACK::~RACK()
 {
 	for (auto i = descriptorSetLayouts.begin(); i != descriptorSetLayouts.end(); ++i)
 	{
-		vkDestroyDescriptorSetLayout(_vulkanDevice, i->second, nullptr);
+		vkDestroyDescriptorSetLayout(VulkanDevice, i->second, nullptr);
 	}
 	for (auto i = commandPools.begin(); i != commandPools.end(); ++i)
 	{
-		vkDestroyCommandPool(_vulkanDevice, i->second, nullptr);
+		vkDestroyCommandPool(VulkanDevice, i->second, nullptr);
 	}
 	for (auto i = buffers.begin(); i != buffers.end(); ++i)
 	{
-		vkDestroyBuffer(_vulkanDevice, i->second, nullptr);
+		vkDestroyBuffer(VulkanDevice, i->second, nullptr);
 	}
 	for (auto i = deviceMemories.begin(); i != deviceMemories.end(); ++i)
 	{
-		vkFreeMemory(_vulkanDevice, i->second, nullptr);
+		vkFreeMemory(VulkanDevice, i->second, nullptr);
 	}
 	for (auto i = descriptorPools.begin(); i != descriptorPools.end(); ++i)
 	{
-		vkDestroyDescriptorPool(_vulkanDevice, i->second, nullptr);
+		vkDestroyDescriptorPool(VulkanDevice, i->second, nullptr);
 	}
+
+	cleanupSwapChain();
+	vkDestroyDevice(VulkanDevice, nullptr);
+}
+
+void RACK::createDescriptorSetLayout() {
+	VkDescriptorSetLayout descriptorSetLayout;
+	VkDescriptorSetLayoutBinding uboLayoutBinding{};
+	uboLayoutBinding.binding = 0;
+	uboLayoutBinding.descriptorCount = 1;
+	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	uboLayoutBinding.pImmutableSamplers = nullptr;
+	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+	VkDescriptorSetLayoutCreateInfo layoutInfo{};
+	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	layoutInfo.bindingCount = 1;
+	layoutInfo.pBindings = &uboLayoutBinding;
+
+	if (vkCreateDescriptorSetLayout(RACK::VulkanDevice, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create descriptor set layout!");
+	}
+	RACK::insertResource(RACK::ResourceType::DESCRIPTOR_SET_LAYOUT, "basic_desc_layout", descriptorSetLayout);
 }

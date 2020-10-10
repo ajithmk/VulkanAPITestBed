@@ -146,6 +146,7 @@
   <ItemGroup>
     <ClCompile Include="DescriptorSets.cpp" />
     <ClCompile Include="GlobalVulkanState.cpp" />
+    <ClCompile Include="Misc.cpp" />
     <ClCompile Include="VulkanDump.cpp" />
     <ClCompile Include="ObjReader.cpp" />
     <ClCompile Include="StaticGeometry.cpp" />
