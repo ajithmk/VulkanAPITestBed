@@ -4,6 +4,9 @@
 
 #include "GlobalVulkanState.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 
 std::vector<char> readFile(const std::string& filename) {
 	std::ifstream file(filename, std::ios::ate | std::ios::binary);
@@ -50,3 +53,40 @@ uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
 	throw std::runtime_error("failed to find suitable memory type!");
 }
 
+void parseTexturePixels(const char* file_path, stbi_uc*& pixels, size_t& image_size, int& width, int& height)
+{
+	int tex_channels;
+	pixels = stbi_load(file_path, &width, &height, &tex_channels, STBI_rgb_alpha);
+	image_size = width * height * 4;
+}
+
+void beginSingleTimeCommands(VkCommandPool command_pool, VkCommandBuffer& command_buffer) {
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandPool = command_pool;
+	allocInfo.commandBufferCount = 1;
+
+	vkAllocateCommandBuffers(rack->VulkanDevice, &allocInfo, &command_buffer);
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer(command_buffer, &beginInfo);
+
+}
+
+void endSingleTimeCommands(VkCommandPool command_pool, VkCommandBuffer command_buffer) {
+	vkEndCommandBuffer(command_buffer);
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &command_buffer;
+
+	vkQueueSubmit(rack->GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(rack->GraphicsQueue);
+
+	vkFreeCommandBuffers(rack->VulkanDevice, command_pool , 1, &command_buffer);
+}

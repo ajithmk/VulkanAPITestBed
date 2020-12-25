@@ -3,14 +3,14 @@
 #include <string>
 #include <vector>
 #include "vocabulary.h"
+#include "ObjReader.h"
 
 
 ofstream err("obj_issues.txt");
-/*void objreader(string obj, vector<Vertex>& V, vector<int32_t>& I)
+void objreader(string obj, vector<Vertex>& V, vector<int32_t>& I)
 {
 	char c;
-	ifstream is;
-	is.open(obj, ios_base::in);
+	ifstream is(obj);
 	string temp;
 	glm::vec4 v; glm::vec2 t;
 	glm::vec3 no;
@@ -79,6 +79,84 @@ ofstream err("obj_issues.txt");
 		V.push_back(ajith);
 	}
 }
+
+void writeCompressedIndices(string filePath, const vector<Vertex> vertices, const vector<int32_t> I)
+{
+	ofstream os(filePath);
+	for (int i = 0; i < vertices.size(); i++)
+	{
+		Vertex vertex = vertices[i];
+		os << "v " << vertex.pos.x << " " << vertex.pos.y << " " << vertex.pos.z << "\n";
+		os << "vn " << vertex.normal.x << " " << vertex.normal.y << " " << vertex.normal.z << "\n";
+		os << "vt " << vertex.uv.x << " " << vertex.uv.y << "\n";
+	}
+	for (int i = 0; i < I.size(); i++)
+	{
+		os << I[i] << "\n";
+	}
+}
+
+void objreaderInLispFormatCompressed(string obj, vector<Vertex>& V, vector<int32_t>& I)
+{
+	ifstream is(obj);
+	string temp;
+	string useless;
+	glm::vec4 vertex; glm::vec2 uv;
+	glm::vec3 normal;
+	vector<glm::vec4> vertices;
+	vector<glm::vec3> normals;
+	vector<glm::vec2> uvs;
+	while (getline(is, temp))
+	{
+		istringstream s(temp);
+		s >> temp;
+		if (temp == "") {}
+		else if (temp == "#S(VOCABULARY:VERTEX") { s >> useless >> vertex.x >> useless >> vertex.y >> useless >> vertex.z; vertex.w = 1; vertices.push_back(vertex); }
+		else if (temp == "#S(VOCABULARY:NORMAL") { s >> useless >> normal.x >> useless >> normal.y >> useless >> normal.z; normals.push_back(normal); }
+		else if (temp == "#S(VOCABULARY:UV") { s >> useless >> uv.x >> useless >> uv.y; uvs.push_back(uv); }
+		else if (temp != "")
+		{
+			I.push_back(std::stoi(temp));
+		}
+	}
+	assert((vertices.size() == normals.size()) && (vertices.size() == uvs.size()));
+	for (int i = 0; i < vertices.size(); i++)
+	{
+		Vertex Vertex = { vertices[i], glm::vec4{}, normals[i], uvs[i] };
+		V.push_back(Vertex);
+	}
+}
+
+
+void objreaderCompressed(string obj, vector<Vertex>& V, vector<int32_t>& I)
+{
+	ifstream is(obj);
+	string temp;
+	glm::vec4 v; glm::vec2 t;
+	glm::vec3 no;
+	vector<glm::vec4> vertices;
+	vector<glm::vec3> normals;
+	vector<glm::vec2> uvs;
+	while (getline(is, temp))
+	{
+		istringstream s(temp);
+		s >> temp;
+		if (temp == "v") { s >> v.x >> v.y >> v.z; v.w = 1; vertices.push_back(v); }
+		else if (temp == "vn") { s >> no.x >> no.y >> no.z; normals.push_back(no); }
+		else if (temp == "vt") { s >> t.x >> t.y; uvs.push_back(t); }
+		else if (temp != "")
+		{
+			I.push_back(std::stoi(temp));
+		}
+	}
+	assert((vertices.size() == normals.size()) && (vertices.size() == uvs.size()));
+	for (int i = 0; i < vertices.size(); i++)
+	{
+		Vertex Vertex = { vertices[i], glm::vec4{}, normals[i], uvs[i] };
+		V.push_back(Vertex);
+	}
+}
+
 void vertexTangentGen(vector<Vertex>& V, vector<int>& I)
 {
 
@@ -132,4 +210,4 @@ void vertexTangentGen(vector<Vertex>& V, vector<int>& I)
 		V[i].tangent.w = (s > 0.0f) ? -1.0f : 1.0f;
 	}
 	delete[] tan1;
-}*/
+};

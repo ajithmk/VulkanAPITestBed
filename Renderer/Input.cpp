@@ -16,17 +16,16 @@ float LowLevelUpdate::DeltaMouseY = 0.0;
 float LowLevelUpdate::NormalizedDeltaMouseX = 0.0;
 float LowLevelUpdate::NormalizedDeltaMouseY = 0.0;
 bool LowLevelUpdate::one_time_guard = true;
+bool LowLevelUpdate::w_pressed = false;
+bool LowLevelUpdate::s_pressed = false;
+bool LowLevelUpdate::a_pressed = false;
+bool LowLevelUpdate::d_pressed = false;
+
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (key == GLFW_KEY_W && action == GLFW_PRESS)
-		camera.TranslateCamera(LowLevelUpdate::NormalizedDelta, 0.0);
-	if (key == GLFW_KEY_S && action == GLFW_PRESS)
-		camera.TranslateCamera(-LowLevelUpdate::NormalizedDelta, 0.0);
-	if (key == GLFW_KEY_A && action == GLFW_PRESS)
-		camera.TranslateCamera(0.0, LowLevelUpdate::NormalizedDelta);
-	if (key == GLFW_KEY_D && action == GLFW_PRESS)
-		camera.TranslateCamera(0.0, -LowLevelUpdate::NormalizedDelta);
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
 }
 
 void SetKeyboardEventsCallback()
