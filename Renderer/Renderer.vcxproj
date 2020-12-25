@@ -146,6 +146,8 @@
   <ItemGroup>
     <ClCompile Include="DescriptorSets.cpp" />
     <ClCompile Include="GlobalVulkanState.cpp" />
+    <ClCompile Include="Input.cpp" />
+    <ClCompile Include="Math.cpp" />
     <ClCompile Include="Misc.cpp" />
     <ClCompile Include="VulkanDump.cpp" />
     <ClCompile Include="ObjReader.cpp" />
@@ -153,7 +155,10 @@
     <ClCompile Include="Vocabulary.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="GlobalVulkanState.h" />
+    <ClInclude Include="Input.h" />
+    <ClInclude Include="Math.h" />
     <ClInclude Include="vocabulary.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

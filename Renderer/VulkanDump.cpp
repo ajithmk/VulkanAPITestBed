@@ -20,13 +20,14 @@
 
 #include "vocabulary.h"
 #include "GlobalVulkanState.h"
+#include "Input.h"
+#include "Camera.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 	
-std::chrono::milliseconds Previous_time;
 
 const std::vector<const char*> validationLayers = {
 	"VK_LAYER_KHRONOS_validation"
@@ -103,6 +104,7 @@ VkDebugUtilsMessengerEXT debugMessenger;
 VkSurfaceKHR surface;
 
 RACK* rack;
+Camera camera;
 
 VkRenderPass renderPass;
 VkDescriptorSetLayout descriptorSetLayout;
@@ -472,7 +474,7 @@ void createGraphicsPipeline() {
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterizer.cullMode = VK_CULL_MODE_NONE;
 	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -785,8 +787,8 @@ void updateUniformBuffer(uint32_t currentImage) {
 	float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
 	UniformBufferObject ubo{};
-	ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	ubo.model = glm::mat4(1.0);//glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	ubo.view = camera.get_camera_matrix();
 	ubo.proj = glm::perspective(glm::radians(45.0f), rack->SwapChainExtent.width / (float)rack->SwapChainExtent.height, 0.1f, 10.0f);
 	ubo.proj[1][1] *= -1;
 
@@ -826,10 +828,8 @@ void destroySwapChainResources()
 
 void drawFrame() {
 
-	std::chrono::milliseconds Current_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-	int delta = (Current_time - Previous_time).count();
-	Previous_time = Current_time;
-	//cout << std::to_string(delta) + "\n";
+	LowLevelUpdate::BasicUpdate();
+	camera.RotateCamera(LowLevelUpdate::NormalizedDeltaMouseX, LowLevelUpdate::NormalizedDeltaMouseY);
 
 	vkWaitForFences(rack->VulkanDevice, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
@@ -958,6 +958,8 @@ void mainLoop() {
 void run() {
 	initWindow();
 	initVulkan();
+	SetKeyboardEventsCallback();
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	mainLoop();
 	cleanup();
 }
