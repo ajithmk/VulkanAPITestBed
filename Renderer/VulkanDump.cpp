@@ -884,7 +884,7 @@ void updateUniformBuffer(uint32_t currentImage) {
 
 	UniformBufferObject ubo{};
 	ubo.model = glm::mat4(1.0);//glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ubo.view = camera.get_camera_matrix();
+	ubo.view = camera.get_view_matrix();
 	ubo.proj = /*glm::ortho(rack->SwapChainExtent.width/2.0f, rack->SwapChainExtent.width/2.0f, rack->SwapChainExtent.height/2.0f, rack->SwapChainExtent.height/2.0f, 0.1f,1000.0f);*/
 		glm::perspective(glm::radians(45.0f), rack->SwapChainExtent.width / (float)rack->SwapChainExtent.height, 0.1f, 1000.0f);
 	ubo.proj[1][1] *= -1;
@@ -1064,11 +1064,12 @@ void run() {
 	SetKeyboardEventsCallback();
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	StaticGeometry geom("F:\\models\\vulkan-models\\sampleFort.obj", true);
+	//StaticGeometry geom("F:\\models\\vulkan-models\\sampleFort.obj", true);
+	StaticGeometry geom("F:\\models\\obj-models\\sampleFort.obj", false, false);
 	indices_size = static_cast<uint32_t>( geom.Indices.size());
 	StageDataToGivenBuffer(geom.Vertices.data(), geom.Vertices.size() * sizeof(Vertex), vertexBuffer, vertexBufferMemory, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 	StageDataToGivenBuffer(geom.Indices.data(), geom.Indices.size() * sizeof(geom.Indices[0]), indexBuffer, indexBufferMemory, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
-	StageTextureToGivenImage("E:\\Renderer\\sampleImage.png", textureImage, textureBufferMemory);
+	StageTextureToGivenImage("E:\\Textures\\sampleImage.png", textureImage, textureBufferMemory);
 	createImageView(textureImage, textureView, VK_FORMAT_R8G8B8A8_SRGB);
 	createTextureSampler(textureSampler);
 
@@ -1079,7 +1080,6 @@ void run() {
 
 
 int main() {
-
 	try {
 		run();
 	}

@@ -11,40 +11,10 @@ void EulerToMatrix(glm::vec3 eulerAngles, glm::mat4 &destMat)
 	float sb = sin(eulerAngles.z);
 	float cb = cos(eulerAngles.z);
 
-	/*destMat[0][0] = ch * ca;
-	destMat[0][1] = -ch * sa * cb + sh * sb;
-	destMat[0][2] = ch * sa * sb + sh * cb;
-	destMat[0][3] = 0.0;
-	destMat[1][0] = sa;
-	destMat[1][1] = ca * cb;
-	destMat[1][2] = -ca * sb;
-	destMat[1][3] = 0.0;
-	destMat[2][0] = -sh * ca;
-	destMat[2][1] = sh * sa * cb + ch * sb;
-	destMat[2][2] = -sh * sa * sb + ch * cb;
-	destMat[2][3] = 0.0;
-	destMat[3][0] = 0.0;
-	destMat[3][1] = 0.0;
-	destMat[3][2] = 0.0;
-	destMat[3][3] = 1.0;*/
-
-	destMat[0][0] = ch * ca;
-	destMat[1][0] = -ch * sa * cb + sh * sb;
-	destMat[2][0] = ch * sa * sb + sh * cb;
-	destMat[3][0] = 0.0;
-	destMat[0][1] = sa;
-	destMat[1][1] = ca * cb;
-	destMat[2][1] = -ca * sb;
-	destMat[3][1] = 0.0;
-	destMat[0][2] = -sh * ca;
-	destMat[1][2] = sh * sa * cb + ch * sb;
-	destMat[2][2] = -sh * sa * sb + ch * cb;
-	destMat[3][2] = 0.0;
-	destMat[0][3] = 0.0;
-	destMat[1][3] = 0.0;
-	destMat[2][3] = 0.0;
-	destMat[3][3] = 1.0;
-
+	destMat[0] = glm::vec4{ ch * ca, sa, -sh * ca, 0.0};
+	destMat[1] = glm::vec4{ -ch * sa * cb + sh * sb, ca * cb, sh * sa * cb + ch * sb, 0.0 };
+	destMat[2] = glm::vec4{ ch * sa * sb + sh * cb , -ca * sb, -sh * sa * sb + ch * cb, 0.0 };
+	destMat[3] = glm::vec4{0.0, 0.0, 0.0, 1.0};
 }
 
 void AxisAngleToMatrix(glm::vec3 axis, float angle, glm::mat4 &destMat)
@@ -57,40 +27,10 @@ void AxisAngleToMatrix(glm::vec3 axis, float angle, glm::mat4 &destMat)
 	float s = sin(angle);
 	float t = 1 - c;
 
-	/*destMat[0][0] = t * x * x + c;
-	destMat[0][1] = t * x * y - z * s;
-	destMat[0][2] = t * x * z + y * s;
-	destMat[0][3] = 0.0;
-	destMat[1][0] = t * x * y + z * s;
-	destMat[1][1] = t * y * y + c;
-	destMat[1][2] = t * y * z - x * s;
-	destMat[1][3] = 0.0;
-	destMat[2][0] = t * x * z - y * s;
-	destMat[2][1] = t * y * z + x * s;
-	destMat[2][2] = t *z * z + c;
-	destMat[2][3] = 0.0;
-	destMat[3][0] = 0.0;
-	destMat[3][1] = 0.0;
-	destMat[3][2] = 0.0;
-	destMat[3][3] = 1.0;*/
-
-	destMat[0][0] = t * x * x + c;
-	destMat[1][0] = t * x * y - z * s;
-	destMat[2][0] = t * x * z + y * s;
-	destMat[3][0] = 0.0;
-	destMat[0][1] = t * x * y + z * s;
-	destMat[1][1] = t * y * y + c;
-	destMat[2][1] = t * y * z - x * s;
-	destMat[3][1] = 0.0;
-	destMat[0][2] = t * x * z - y * s;
-	destMat[1][2] = t * y * z + x * s;
-	destMat[2][2] = t *z * z + c;
-	destMat[3][2] = 0.0;
-	destMat[0][3] = 0.0;
-	destMat[1][3] = 0.0;
-	destMat[2][3] = 0.0;
-	destMat[3][3] = 1.0;
-
+	destMat[0] = glm::vec4{ t * x * x + c , t * x * y + z * s , t * x * z - y * s , 0.0 };
+	destMat[1] = glm::vec4{ t * x * y - z * s , t * y * y + c , t * y * z + x * s, 0.0 };
+	destMat[2] = glm::vec4{ t * x * z + y * s , t * y * z - x * s , t * z * z + c , 0.0};
+	destMat[3] = glm::vec4{ 0.0, 0.0, 0.0, 1.0 };
 }
 
 void MatrixToEuler(glm::mat4 rotMatrix, glm::vec3 &eulerAngles)

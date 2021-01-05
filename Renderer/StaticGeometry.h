@@ -9,7 +9,7 @@ public:
 	vector<int32_t> Indices;
 
 	glm::mat4 ModelMatrix = glm::mat4(1.0);
-	StaticGeometry(string filePath, bool isLispFormat = false)
+	StaticGeometry(string filePath, bool isLispFormat = false, bool isCompressed = true)
 	{
 		if (isLispFormat)
 		{
@@ -17,7 +17,9 @@ public:
 		}
 		else
 		{
+			if (isCompressed)
 			objreaderCompressed(filePath, Vertices, Indices);
+			objreader(filePath, Vertices, Indices);
 		}
 	}
 };

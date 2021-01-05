@@ -54,7 +54,7 @@ void objreader(string obj, vector<Vertex>& V, vector<int32_t>& I)
 		}
 		if (found == 0) { indices2.push_back(indices1[i]); }
 	}
-	int size2 = indices2.size();
+	int size2 = indices2.size() - 1;
 	for (int i = 0; i < size2; i++)
 	{
 		vertices.push_back(vertices1[indices2[i].v_index - 1]);
@@ -111,9 +111,12 @@ void objreaderInLispFormatCompressed(string obj, vector<Vertex>& V, vector<int32
 		istringstream s(temp);
 		s >> temp;
 		if (temp == "") {}
-		else if (temp == "#S(VOCABULARY:VERTEX") { s >> useless >> vertex.x >> useless >> vertex.y >> useless >> vertex.z; vertex.w = 1; vertices.push_back(vertex); }
-		else if (temp == "#S(VOCABULARY:NORMAL") { s >> useless >> normal.x >> useless >> normal.y >> useless >> normal.z; normals.push_back(normal); }
-		else if (temp == "#S(VOCABULARY:UV") { s >> useless >> uv.x >> useless >> uv.y; uvs.push_back(uv); }
+		else if (temp == "#S(VOCABULARY:VERTEX" 
+			|| temp == "#S(VERTEX") { s >> useless >> vertex.x >> useless >> vertex.y >> useless >> vertex.z; vertex.w = 1; vertices.push_back(vertex); }
+		else if (temp == "#S(VOCABULARY:NORMAL"
+			|| temp == "#S(NORMAL") { s >> useless >> normal.x >> useless >> normal.y >> useless >> normal.z; normals.push_back(normal); }
+		else if (temp == "#S(VOCABULARY:UV"
+			|| temp == "#S(UV") { s >> useless >> uv.x >> useless >> uv.y; uvs.push_back(uv); }
 		else if (temp != "")
 		{
 			I.push_back(std::stoi(temp));
