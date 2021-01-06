@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
+#include <vector>
 #include "ObjReader.h"
+#include "RenderSubSystem/vocabulary.h"
 
 class StaticGeometry {
 public:

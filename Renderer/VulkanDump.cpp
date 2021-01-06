@@ -18,12 +18,12 @@
 #include <optional>
 #include <set>
 
-#include "vocabulary.h"
+#include "RenderSubSystem/vocabulary.h"
 #include "GlobalVulkanState.h"
 #include "Input.h"
 #include "Camera.h"
-#include "StaticGeometry.h"
 #include "stb_image.h"
+#include "RenderSubSystem/Render.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -92,6 +92,8 @@ uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 void parseTexturePixels(const char* file_path, stbi_uc*& pixels, size_t& texture_size, int& width, int& height);
 void endSingleTimeCommands(VkCommandPool command_pool,VkCommandBuffer command_buffer);
 void beginSingleTimeCommands(VkCommandPool command_pool, VkCommandBuffer& command_buffer);
+VkVertexInputBindingDescription getBindingDescription();
+std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions();
 
 GLFWwindow* window;
 
@@ -135,7 +137,7 @@ size_t currentFrame = 0;
 
 bool framebufferResized = false;
 
-static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+RENDER_API void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
 	framebufferResized = true;
 }
 
@@ -364,8 +366,8 @@ void createDescriptorSetLayout() {
 }
 
 void createGraphicsPipeline() {
-	auto vertShaderCode = readFile("shaders/vert.spv");
-	auto fragShaderCode = readFile("shaders/frag.spv");
+	auto vertShaderCode = readFile("E:/Renderer/Renderer/shaders/vert.spv");
+	auto fragShaderCode = readFile("E:/Renderer/Renderer/shaders/frag.spv");
 
 	VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
 	VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
@@ -387,8 +389,8 @@ void createGraphicsPipeline() {
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-	auto bindingDescription = Vertex::getBindingDescription();
-	auto attributeDescriptions = Vertex::getAttributeDescriptions();
+	auto bindingDescription = getBindingDescription();
+	auto attributeDescriptions = getAttributeDescriptions();
 
 	vertexInputInfo.vertexBindingDescriptionCount = 1;
 	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
@@ -1048,7 +1050,7 @@ void cleanup() {
 
 
 
-void mainLoop() {
+RENDER_API void RenderLoop() {
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 		drawFrame();
@@ -1057,36 +1059,33 @@ void mainLoop() {
 	vkDeviceWaitIdle(rack->VulkanDevice);
 }
 
-void run() {
-	initWindow();
+RENDER_API void InitRenderSubSystem(GLFWwindow *const window1)
+{
+	window = window1;
 	initVulkan();
 
 	SetKeyboardEventsCallback();
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-	//StaticGeometry geom("F:\\models\\vulkan-models\\sampleFort.obj", true);
-	StaticGeometry geom("F:\\models\\obj-models\\sampleFort.obj", false, false);
-	indices_size = static_cast<uint32_t>( geom.Indices.size());
-	StageDataToGivenBuffer(geom.Vertices.data(), geom.Vertices.size() * sizeof(Vertex), vertexBuffer, vertexBufferMemory, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-	StageDataToGivenBuffer(geom.Indices.data(), geom.Indices.size() * sizeof(geom.Indices[0]), indexBuffer, indexBufferMemory, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 	StageTextureToGivenImage("E:\\Textures\\sampleImage.png", textureImage, textureBufferMemory);
 	createImageView(textureImage, textureView, VK_FORMAT_R8G8B8A8_SRGB);
 	createTextureSampler(textureSampler);
 
-	recreateSwapChainResources();
-	mainLoop();
-	cleanup();
+	createRenderPass();
+	createGraphicsPipeline();
+	rack->createFramebuffers(renderPass);
+	createUniformBuffers();
+	createDescriptorPool();
+	createDescriptorSets();
 }
 
+RENDER_API void SetGeometryData(void* verex_data, uint64_t vertices_number, void* index_data, uint64_t indices_number)
+{
+	StageDataToGivenBuffer(verex_data, vertices_number * sizeof(Vertex), vertexBuffer, vertexBufferMemory, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+	StageDataToGivenBuffer(index_data, indices_number * sizeof(int32_t), indexBuffer, indexBufferMemory, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+	createCommandBuffers(static_cast<uint32_t>(indices_number));
+}
 
-int main() {
-	try {
-		run();
-	}
-	catch (const std::exception & e) {
-		std::cerr << e.what() << std::endl;
-		return EXIT_FAILURE;
-	}
-
-	return EXIT_SUCCESS;
+RENDER_API void ShutdownRenderSubsystem()
+{
+	cleanup();
 }

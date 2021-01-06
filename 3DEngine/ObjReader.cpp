@@ -2,7 +2,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "vocabulary.h"
 #include "ObjReader.h"
 
 

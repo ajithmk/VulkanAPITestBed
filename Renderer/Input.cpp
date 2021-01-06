@@ -2,6 +2,7 @@
 
 #include "Input.h"
 #include "Camera.h"
+#include "RenderSubSystem/Render.h"
 
 double LowLevelUpdate::MousePosX = 0.0;
 double LowLevelUpdate::MousePosY = 0.0;
@@ -22,7 +23,7 @@ bool LowLevelUpdate::a_pressed = false;
 bool LowLevelUpdate::d_pressed = false;
 
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+RENDER_API void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);

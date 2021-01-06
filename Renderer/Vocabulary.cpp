@@ -1,8 +1,8 @@
 #include <vulkan/vulkan_core.h>
 #include <array>
-#include "vocabulary.h"
+#include "RenderSubSystem/vocabulary.h"
 
-VkVertexInputBindingDescription Vertex::getBindingDescription() {
+VkVertexInputBindingDescription getBindingDescription() {
     VkVertexInputBindingDescription bindingDescription{};
     bindingDescription.binding = 0;
     bindingDescription.stride = sizeof(Vertex);
@@ -11,7 +11,7 @@ VkVertexInputBindingDescription Vertex::getBindingDescription() {
     return bindingDescription;
 }
 
-std::array<VkVertexInputAttributeDescription, 4> Vertex::getAttributeDescriptions() {
+std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions() {
     std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions{};
 
     attributeDescriptions[0].binding = 0;

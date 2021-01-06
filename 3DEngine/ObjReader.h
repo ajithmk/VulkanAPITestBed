@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+#include "RenderSubSystem/vocabulary.h"
 
 void objreader(string obj, vector<Vertex>& V, vector<int32_t>& I);
 void objreaderInLispFormatCompressed(string obj, vector<Vertex>& V, vector<int32_t>& I);
